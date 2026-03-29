@@ -1,6 +1,7 @@
 interface NodeInfo {
   id: string;
   value: string;
+  shape: string;
 }
 
 interface EdgeInfo {
@@ -11,6 +12,18 @@ interface EdgeInfo {
 
 function stripHtml(value: string): string {
   return value.replace(/<[^>]*>/g, '').trim();
+}
+
+function extractShape(style: string): string {
+  if (!style) return '';
+  const shapeMatch = style.match(/shape=([^;]+)/);
+  if (shapeMatch) return shapeMatch[1];
+  // Common built-in shapes encoded as style keys
+  const builtinShapes = ['ellipse', 'rhombus', 'triangle', 'cylinder', 'hexagon', 'parallelogram', 'trapezoid', 'document', 'cloud', 'process', 'swimlane'];
+  for (const s of builtinShapes) {
+    if (style.includes(s)) return s;
+  }
+  return '';
 }
 
 export function simplifyDrawioXml(xml: string): string {
@@ -33,6 +46,8 @@ export function simplifyDrawioXml(xml: string): string {
     const source = cell.getAttribute('source');
     const target = cell.getAttribute('target');
 
+    const style = cell.getAttribute('style') || '';
+
     if (isEdge && source && target) {
       edges.push({
         sourceId: source,
@@ -40,7 +55,7 @@ export function simplifyDrawioXml(xml: string): string {
         label: stripHtml(value),
       });
     } else if (value && stripHtml(value).length > 0) {
-      nodes.push({ id, value: stripHtml(value) });
+      nodes.push({ id, value: stripHtml(value), shape: extractShape(style) });
     }
   });
 
@@ -49,7 +64,8 @@ export function simplifyDrawioXml(xml: string): string {
   if (nodes.length > 0) {
     lines.push('### Nodes');
     nodes.forEach((node, i) => {
-      lines.push(`- [${i + 1}] ${node.value}`);
+      const shapeLabel = node.shape ? ` [${node.shape}]` : '';
+      lines.push(`- [${i + 1}] ${node.value}${shapeLabel}`);
     });
   }
 

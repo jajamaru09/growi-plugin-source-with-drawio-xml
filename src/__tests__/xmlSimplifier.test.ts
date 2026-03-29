@@ -62,6 +62,37 @@ describe('simplifyDrawioXml', () => {
     expect(nodeLines).toHaveLength(1);
   });
 
+  it('includes shape from style attribute', () => {
+    const xml = `<mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="2" value="User" style="shape=uml-Actor;verticalLabelPosition=bottom;" vertex="1" parent="1"/>
+        <mxCell id="3" value="DB" style="shape=cylinder3;size=15;" vertex="1" parent="1"/>
+        <mxCell id="4" value="Plain" vertex="1" parent="1"/>
+      </root>
+    </mxGraphModel>`;
+    const result = simplifyDrawioXml(xml);
+    expect(result).toContain('- [1] User [uml-Actor]');
+    expect(result).toContain('- [2] DB [cylinder3]');
+    expect(result).toContain('- [3] Plain');
+    expect(result).not.toContain('Plain [');
+  });
+
+  it('detects builtin shapes from style', () => {
+    const xml = `<mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="2" value="Decision" style="rhombus;whiteSpace=wrap;" vertex="1" parent="1"/>
+        <mxCell id="3" value="Start" style="ellipse;whiteSpace=wrap;" vertex="1" parent="1"/>
+      </root>
+    </mxGraphModel>`;
+    const result = simplifyDrawioXml(xml);
+    expect(result).toContain('- [1] Decision [rhombus]');
+    expect(result).toContain('- [2] Start [ellipse]');
+  });
+
   it('handles edges with unknown source/target gracefully', () => {
     const xml = `<mxGraphModel>
       <root>
