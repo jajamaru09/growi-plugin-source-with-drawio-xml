@@ -3,6 +3,7 @@ import { waitForToolbarAndAddButton, removeButton } from './src/toolbar';
 declare global {
   interface Window {
     pluginActivators: Record<string, { activate: () => void; deactivate: () => void }>;
+    navigation?: EventTarget;
   }
 }
 
