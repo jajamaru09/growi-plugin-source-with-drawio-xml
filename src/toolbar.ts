@@ -6,8 +6,8 @@ const TOOLBAR_SELECTOR = '._codemirror-editor-toolbar_q11bm_1 .simplebar-content
 const MAX_ATTEMPTS = 20;
 const POLL_INTERVAL = 200;
 
-function handleClick(): void {
-  const content = getEditorContent();
+async function handleClick(): Promise<void> {
+  const content = await getEditorContent();
   if (content === null) {
     alert('Could not access the editor content.');
     return;
