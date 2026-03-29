@@ -27,7 +27,12 @@ export function extractAllDrawioBlocks(content: string): DrawioBlock[] {
 
   while ((match = regex.exec(content)) !== null) {
     const base64 = match[1].trim();
-    const xml = decodeDrawioContent(base64);
+    let xml: string;
+    try {
+      xml = decodeDrawioContent(base64);
+    } catch {
+      xml = `[Decode Error: Failed to decode Diagram ${index}]`;
+    }
     blocks.push({
       index,
       base64,

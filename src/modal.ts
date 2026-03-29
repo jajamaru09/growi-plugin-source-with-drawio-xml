@@ -3,6 +3,8 @@ import { simplifyDrawioXml } from './xmlSimplifier';
 import { insertAtCursor } from './editorHelper';
 
 let modalElement: HTMLElement | null = null;
+let backdropElement: HTMLElement | null = null;
+let escapeHandler: ((e: KeyboardEvent) => void) | null = null;
 
 interface ProcessedContent {
   simplifiedText: string;
@@ -43,7 +45,9 @@ async function copyToClipboard(text: string, button: HTMLButtonElement): Promise
     button.textContent = 'Copied!';
     setTimeout(() => { button.textContent = original; }, 1500);
   } catch {
-    // Fallback: select textarea content
+    const original = button.textContent;
+    button.textContent = 'Failed';
+    setTimeout(() => { button.textContent = original; }, 1500);
   }
 }
 
@@ -203,6 +207,7 @@ export function showModal(markdown: string): void {
   document.body.appendChild(backdrop);
   document.body.appendChild(modal);
   modalElement = modal;
+  backdropElement = backdrop;
 
   // Close on backdrop click
   modal.addEventListener('click', (e) => {
@@ -210,19 +215,23 @@ export function showModal(markdown: string): void {
   });
 
   // Close on Escape
-  const onKeydown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      closeModal();
-      document.removeEventListener('keydown', onKeydown);
-    }
+  escapeHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') closeModal();
   };
-  document.addEventListener('keydown', onKeydown);
+  document.addEventListener('keydown', escapeHandler);
 }
 
 export function closeModal(): void {
+  if (escapeHandler) {
+    document.removeEventListener('keydown', escapeHandler);
+    escapeHandler = null;
+  }
   if (modalElement) {
     modalElement.remove();
     modalElement = null;
   }
-  document.querySelector('.modal-backdrop')?.remove();
+  if (backdropElement) {
+    backdropElement.remove();
+    backdropElement = null;
+  }
 }

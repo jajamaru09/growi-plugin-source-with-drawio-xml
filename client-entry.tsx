@@ -1,4 +1,5 @@
 import { waitForToolbarAndAddButton, removeButton } from './src/toolbar';
+import { closeModal } from './src/modal';
 
 declare global {
   interface Window {
@@ -29,6 +30,7 @@ const deactivate = (): void => {
     (window.navigation as any).removeEventListener('navigatesuccess', onNavigate);
   }
   removeButton();
+  closeModal();
 };
 
 if (!window.pluginActivators) {
