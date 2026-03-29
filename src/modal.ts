@@ -12,6 +12,14 @@ interface ProcessedContent {
   blocks: DrawioBlock[];
 }
 
+function simplifyImages(text: string): string {
+  // ![alt text](url) → [Image: alt text] or [Image] if no alt
+  return text.replace(/!\[([^\]]*)\]\([^)]+\)/g, (_match, alt) => {
+    const trimmed = alt.trim();
+    return trimmed ? `[Image: ${trimmed}]` : '[Image]';
+  });
+}
+
 function processContent(markdown: string): ProcessedContent {
   const blocks = extractAllDrawioBlocks(markdown);
 
@@ -34,6 +42,8 @@ function processContent(markdown: string): ProcessedContent {
       xmlReplacement +
       xmlText.substring(block.endPos);
   }
+
+  simplifiedText = simplifyImages(simplifiedText);
 
   return { simplifiedText, xmlText, blocks };
 }
