@@ -148,6 +148,10 @@ export function simplifyDrawioXml(xml: string): string {
     });
   }
 
+  // Build id -> display number map from sorted nodes
+  const idToNum = new Map<string, number>();
+  sortedNodes.forEach((node, i) => idToNum.set(node.id, i + 1));
+
   // Connections section
   if (edges.length > 0) {
     lines.push('');
@@ -157,8 +161,14 @@ export function simplifyDrawioXml(xml: string): string {
     nodes.forEach((n) => nameMap.set(n.id, n.value));
 
     edges.forEach((edge) => {
-      const sourceName = nameMap.get(edge.sourceId) || `[${edge.sourceId}]`;
-      const targetName = nameMap.get(edge.targetId) || `[${edge.targetId}]`;
+      const sourceNum = idToNum.get(edge.sourceId);
+      const targetNum = idToNum.get(edge.targetId);
+      const sourceName = sourceNum
+        ? `[${sourceNum}] ${nameMap.get(edge.sourceId)}`
+        : `[?] ${edge.sourceId}`;
+      const targetName = targetNum
+        ? `[${targetNum}] ${nameMap.get(edge.targetId)}`
+        : `[?] ${edge.targetId}`;
       const parts: string[] = [];
       if (edge.label) parts.push(edge.label);
       if (edge.dashed) parts.push('dashed');

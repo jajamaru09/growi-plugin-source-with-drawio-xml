@@ -27,7 +27,7 @@ describe('simplifyDrawioXml', () => {
       </root>
     </mxGraphModel>`;
     const result = simplifyDrawioXml(xml);
-    expect(result).toMatch(/A\s*→\s*B/);
+    expect(result).toMatch(/\[1\] A\s*→\s*\[2\] B/);
   });
 
   it('includes edge labels when present', () => {
@@ -41,7 +41,7 @@ describe('simplifyDrawioXml', () => {
       </root>
     </mxGraphModel>`;
     const result = simplifyDrawioXml(xml);
-    expect(result).toMatch(/Client\s*→\s*Server\s*\(HTTP Request\)/);
+    expect(result).toMatch(/\[1\] Client\s*→\s*\[2\] Server\s*\(HTTP Request\)/);
   });
 
   it('skips cells with empty or HTML-only values', () => {
@@ -97,7 +97,7 @@ describe('simplifyDrawioXml', () => {
     </mxGraphModel>`;
     const result = simplifyDrawioXml(xml);
     expect(result).toContain('Lonely');
-    expect(result).toMatch(/Lonely\s*→\s*\[99\]/);
+    expect(result).toMatch(/\[1\] Lonely\s*→\s*\[\?\] 99/);
   });
 
   it('shows group/container relationships', () => {
@@ -152,6 +152,6 @@ describe('simplifyDrawioXml', () => {
     expect(result).toContain('Error [color:#FF0000]');
     expect(result).toContain('Optional [dashed]');
     expect(result).not.toContain('Normal [');
-    expect(result).toMatch(/Error\s*→\s*Optional\s*\(dashed\)/);
+    expect(result).toMatch(/\[\d+\] Error\s*→\s*\[\d+\] Optional\s*\(dashed\)/);
   });
 });
