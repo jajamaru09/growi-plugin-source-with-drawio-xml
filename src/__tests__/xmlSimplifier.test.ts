@@ -12,8 +12,8 @@ describe('simplifyDrawioXml', () => {
       </root>
     </mxGraphModel>`;
     const result = simplifyDrawioXml(xml);
-    expect(result).toContain('ユーザー');
-    expect(result).toContain('サーバー');
+    expect(result).toContain('- [1] ユーザー');
+    expect(result).toContain('- [2] サーバー');
   });
 
   it('extracts connections between nodes', () => {
@@ -57,9 +57,7 @@ describe('simplifyDrawioXml', () => {
       </root>
     </mxGraphModel>`;
     const result = simplifyDrawioXml(xml);
-    expect(result).toContain('Real Node');
-    expect(result).not.toContain('[1]');
-    // "Real Node" should be the only node listed
+    expect(result).toContain('- [1] Real Node');
     const nodeLines = result.split('\n').filter(l => l.match(/^- \[\d+\]/));
     expect(nodeLines).toHaveLength(1);
   });
@@ -74,8 +72,7 @@ describe('simplifyDrawioXml', () => {
       </root>
     </mxGraphModel>`;
     const result = simplifyDrawioXml(xml);
-    expect(result).toContain('Lonely');
-    // Edge with unknown target should use ID fallback
+    expect(result).toContain('- [1] Lonely');
     expect(result).toMatch(/Lonely\s*→\s*\[99\]/);
   });
 });

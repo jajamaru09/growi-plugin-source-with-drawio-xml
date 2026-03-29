@@ -13,76 +13,43 @@ function stripHtml(value: string): string {
   return value.replace(/<[^>]*>/g, '').trim();
 }
 
-function decodeXmlEntities(value: string): string {
-  return value
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'");
-}
-
-function getAttribute(tag: string, attr: string): string | null {
-  // Match attr="value" or attr='value'
-  const re = new RegExp(`\\b${attr}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, 'i');
-  const m = re.exec(tag);
-  if (!m) return null;
-  return m[1] !== undefined ? m[1] : m[2];
-}
-
-function parseMxCells(xml: string): Array<Record<string, string | null>> {
-  const cells: Array<Record<string, string | null>> = [];
-  // Match self-closing <mxCell ... /> or <mxCell ...></mxCell>
-  const cellRe = /<mxCell\b([^>]*?)(?:\/>|>[\s\S]*?<\/mxCell>)/gi;
-  let match: RegExpExecArray | null;
-  while ((match = cellRe.exec(xml)) !== null) {
-    const attrs = match[1];
-    cells.push({
-      id: getAttribute(attrs, 'id'),
-      value: getAttribute(attrs, 'value'),
-      edge: getAttribute(attrs, 'edge'),
-      vertex: getAttribute(attrs, 'vertex'),
-      source: getAttribute(attrs, 'source'),
-      target: getAttribute(attrs, 'target'),
-    });
-  }
-  return cells;
-}
-
 export function simplifyDrawioXml(xml: string): string {
-  const rawCells = parseMxCells(xml);
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'application/xml');
 
+  const parserError = doc.querySelector('parsererror');
+  if (parserError) {
+    return `[XML Parse Error: ${parserError.textContent}]`;
+  }
+
+  const cells = doc.querySelectorAll('mxCell');
   const nodes: NodeInfo[] = [];
   const edges: EdgeInfo[] = [];
 
-  for (const cell of rawCells) {
-    const id = cell.id ?? '';
-    const rawValue = cell.value ?? '';
-    const isEdge = cell.edge === '1';
-    const source = cell.source;
-    const target = cell.target;
-
-    // Decode XML entities then strip HTML tags
-    const decodedValue = decodeXmlEntities(rawValue);
-    const cleanValue = stripHtml(decodedValue);
+  cells.forEach((cell) => {
+    const id = cell.getAttribute('id') || '';
+    const value = cell.getAttribute('value') || '';
+    const isEdge = cell.getAttribute('edge') === '1';
+    const source = cell.getAttribute('source');
+    const target = cell.getAttribute('target');
 
     if (isEdge && source && target) {
       edges.push({
         sourceId: source,
         targetId: target,
-        label: cleanValue,
+        label: stripHtml(value),
       });
-    } else if (cleanValue.length > 0) {
-      nodes.push({ id, value: cleanValue });
+    } else if (value && stripHtml(value).length > 0) {
+      nodes.push({ id, value: stripHtml(value) });
     }
-  }
+  });
 
   const lines: string[] = [];
 
   if (nodes.length > 0) {
     lines.push('### Nodes');
-    nodes.forEach((node) => {
-      lines.push(`- [${node.id}] ${node.value}`);
+    nodes.forEach((node, i) => {
+      lines.push(`- [${i + 1}] ${node.value}`);
     });
   }
 
